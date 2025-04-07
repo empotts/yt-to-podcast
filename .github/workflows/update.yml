@@ -1,0 +1,40 @@
+name: Update Podcast Feed
+on:
+  schedule:
+    - cron: "0 12 * * *" # Daily at noon UTC
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      B2_APP_KEY: ${{ secrets.B2_APP_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache processed videos
+        uses: actions/cache@v3
+        with:
+          path: |
+            processed_videos.txt
+            feed.xml
+          key: ${{ runner.os }}-podcast
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate feed
+        run: python generate_feed.py
+
+      - name: Deploy Feed
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
