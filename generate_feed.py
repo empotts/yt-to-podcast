@@ -66,7 +66,15 @@ def create_feed():
     'sleep_interval': 30,
     'retries': 5,
     'ignoreerrors': True,
-}
+    
+    }
+    if os.environ.get('YT_USERNAME') and os.environ.get('YT_PASSWORD'):
+        ydl_opts.update({
+            'username': os.environ.get('YT_USERNAME'),
+            'password': os.environ.get('YT_PASSWORD'),
+        })
+    
+
 
 
     fg = FeedGenerator()
