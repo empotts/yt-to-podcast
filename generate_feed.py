@@ -51,13 +51,23 @@ def create_feed():
     bucket = connect_b2()
     processed = get_processed_videos()
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': '%(id)s.%(ext)s',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-        }]
-    }
+    'format': 'bestaudio/best',
+    'outtmpl': '%(id)s.%(ext)s',
+    'postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+    }],
+    'http_headers': {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://www.youtube.com/'
+    },
+    'ratelimit': 10000000,
+    'sleep_interval': 30,
+    'retries': 5,
+    'ignoreerrors': True,
+}
+
 
     fg = FeedGenerator()
     fg.title('YouTube Podcast')
