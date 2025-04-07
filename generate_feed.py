@@ -87,29 +87,41 @@ def create_feed():
     with open("channels.txt") as channels:
         for channel_url in channels:
             channel_url = channel_url.strip()
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(channel_url, download=False)
+            if not channel_url:  # Skip empty lines
+                continue
                 
-                # Get latest videos, filter processed
-                entries = [e for e in info['entries'] if e['id'] not in processed][-MAX_EPISODES:]
-                
-                for entry in entries:
-                    try:
-                        ydl.download([entry['webpage_url']])
-                        mp3_file = f"{entry['id']}.mp3"
-                        audio_url = upload_to_b2(bucket, mp3_file, entry['id'])
-                        
-                        fe = fg.add_entry()
-                        fe.id(entry['id'])
-                        fe.title(entry['title'])
-                        fe.description(entry.get('description', ''))
-                        fe.enclosure(audio_url, 0, 'audio/mpeg')
-                        fe.pubDate(entry['upload_date'])
-                        
-                        new_entries.append(entry['id'])
-                        os.remove(mp3_file)
-                    except Exception as e:
-                        print(f"Failed processing {entry['id']}: {str(e)}")
+            try:
+                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(channel_url, download=False)
+                    
+                    # First, get the latest MAX_EPISODES videos
+                    latest_entries = info.get('entries', [])[-MAX_EPISODES:]
+                    
+                    # Then filter out already processed videos
+                    unprocessed_entries = [e for e in latest_entries if e.get('id') not in processed]
+                    
+                    print(f"Processing {len(unprocessed_entries)} new videos from {channel_url}")
+                    
+                    for entry in unprocessed_entries:
+                        try:
+                            ydl.download([entry['webpage_url']])
+                            mp3_file = f"{entry['id']}.mp3"
+                            audio_url = upload_to_b2(bucket, mp3_file, entry['id'])
+                            
+                            fe = fg.add_entry()
+                            fe.id(entry['id'])
+                            fe.title(entry['title'])
+                            fe.description(entry.get('description', ''))
+                            fe.enclosure(audio_url, 0, 'audio/mpeg')
+                            fe.pubDate(entry['upload_date'])
+                            
+                            new_entries.append(entry['id'])
+                            os.remove(mp3_file)
+                            print(f"Successfully processed: {entry['title']}")
+                        except Exception as e:
+                            print(f"Failed processing {entry['id']}: {str(e)}")
+            except Exception as e:
+                print(f"Error processing channel {channel_url}: {str(e)}")
 
     # Update processed list
     with open("processed_videos.txt", "a") as f:
