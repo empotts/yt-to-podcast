@@ -1,3 +1,2 @@
-feedgen==1.0.0
-yt-dlp==2023.7.6
-b2sdk==1.20.0
+https://www.youtube.com/@AtriocVODs
+https://www.youtube.com/@t3dotgg
